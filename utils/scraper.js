@@ -9,6 +9,8 @@ async function scraper(){
     return getData(page)
 }
 
+
+
 const getData = html => {
 
 

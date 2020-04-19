@@ -1,44 +1,8 @@
 const client = require('./redisClient')
 const scraper = require('./scraper')
 const moment = require('moment')
+const { isEmpty, defaultObj, getRedisObj, getObject, redisSet } = require('./helpers')
 
-
-const getObject = (key, list) => {
-    for (let i=0; i < list.length; i++){
-        if (list[i].name == key){
-            return list[i]
-        }
-    }
-    return {}
-}
-
-const getRedisObj = async (object) => {
-    result = await client.get(object);
-    return JSON.parse(result)
-}
-
-function defaultObj(name){
-    initalObj = {
-        name,
-        totalCases: 0,
-        activeCases: 0,
-        discharged: 0,
-        deaths: 0,
-        changeTotal: 0,
-        changeActive: 0,
-        changeDischarged: 0,
-        changeDeaths: 0
-      }
-    return initalObj;
-}
-
-function isEmpty(obj) {
-    for(var key in obj) {
-        if(obj.hasOwnProperty(key))
-            return false;
-    }
-    return true;
-}
 
 async function main(){
 
@@ -59,7 +23,6 @@ async function main(){
     // Check New Date
     let newDay = false;
 
-    // let lastRun = "2020-04-02T08:12:03+08:00"
     let lastRun = await client.get('lasttimestamp')
     if (!lastRun){
         lastRun = moment().format();
@@ -107,7 +70,7 @@ async function main(){
         // Do error checking here to deal if values are empty or in the case removed from NCDC Site. Equate All values to zero
         if (isEmpty(baselineData)){
             baselineData = defaultObj(data);
-            await client.set(`${data}-baseline`, JSON.stringify(baselineData))
+            await redisSet(`${data}-baseline`, baselineData);
         }
         
         if (isEmpty(currentData)) {
@@ -116,7 +79,7 @@ async function main(){
         
         if (isEmpty(lastData)){
             lastData = defaultObj(data);
-            await client.set(`${data}-lastview`, JSON.stringify(lastData))
+            await redisSet(`${data}-lastview`, lastData);
         }
 
         //check if there is a difference for each state.
@@ -160,7 +123,7 @@ async function main(){
         newView.push(currentData)
 
         // reset each lastview
-        await client.set(`${data}-lastview`, JSON.stringify(currentData))
+        await redisSet(`${data}-lastview`, currentData);
     }
 
     newDay = false
@@ -176,9 +139,9 @@ async function main(){
         await client.publish('UPDATED_VIEW', JSON.stringify(publishdata))
 
         // Save Published Events
-        await client.set("lastview", JSON.stringify(newView));
+        await redisSet('lastview', newView)
 
-        await client.set("lastSummary", JSON.stringify(summaryTotal))
+        await redisSet('lastSummary', summaryTotal)
         // change data back to false
         dataChanges = false;
     }
