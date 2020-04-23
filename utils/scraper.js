@@ -9,22 +9,23 @@ async function scraper(){
     return getData(page)
 }
 
-
+const reg = /\d+/;
 
 const getData = html => {
-
-
     const data = [];
+
     const summary = {
-        totalActive: 0,
-        totalDischarged: 0,
-        totalDeath: 0,
-        totalCases: 0,
-        changeTotal: 0,
-        changeActive: 0,
-        changeDischarged: 0,
-        changeDeaths: 0,
-        updateTime: moment().format()
+        name: 'Total',
+        totalcases: 0,
+        activecases: 0,
+        discharged: 0,
+        deaths: 0,
+        changetotal: 0,
+        changeactive: 0,
+        changedischarged: 0,
+        changedeaths: 0,
+        test: 0,
+        date: moment().format()
     };
 
 
@@ -34,16 +35,17 @@ const getData = html => {
         const tdTags = $(elem).find("td");
         let value = numParse($(tdTags[1]).text().trim());
         if (index == 0){
-            summary['testSum'] = $(tdTags[1]).text().trim();
+            test = $(tdTags[1]).text().trim();
+            summary['test'] = parseInt(test.match(reg))
         } else if (index == 1){
-            summary['totalCases'] = value;
-            summary['totalActive'] += value;
+            summary['totalcases'] = value;
+            summary['activecases'] += value;
         } else if (index == 2){
-            summary['totalDischarged'] = value;
-            summary['totalActive'] -= value;
+            summary['discharged'] = value;
+            summary['activecases'] -= value;
         } else if (index == 3){
-            summary['totalDeath'] = value;
-            summary['totalActive'] -= value;
+            summary['deaths'] = value;
+            summary['activecases'] -= value;
         }
     })
 
@@ -55,14 +57,15 @@ const getData = html => {
         if(name !== '' && name !== 'Total'){
             data.push({
                 name,
-                'totalCases':numParse($(tdTags[1]).text().trim()),
-                'activeCases':numParse($(tdTags[2]).text().trim()),
+                'totalcases':numParse($(tdTags[1]).text().trim()),
+                'activecases':numParse($(tdTags[2]).text().trim()),
                 'discharged': numParse($(tdTags[3]).text().trim()),
                 'deaths': numParse($(tdTags[4]).text().trim()),
-                'changeTotal': 0,
-                'changeActive': 0,
-                'changeDischarged': 0,
-                'changeDeaths': 0
+                'changetotal': 0,
+                'changeactive': 0,
+                'changedischarged': 0,
+                'changedeaths': 0,
+                'date': moment().format()
             });
         }
 
@@ -79,6 +82,7 @@ const numParse = (string) => {
     return isNaN(num) ? string : num
 }
 
-// scraper().then(console.log('done'))
+// scraper().then(data => console.log(data));
+
 
 module.exports = scraper;
