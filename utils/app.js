@@ -24,6 +24,7 @@ async function main(){
         if (isEmpty(lastData)){
             lastData = defaultObj(currentData.name);
         }
+        
 
         if (isEmpty(baselineData)){
             baselineData = defaultObj(currentData.name);
@@ -49,9 +50,8 @@ async function main(){
                 currentData['changedeaths'] = currentData['deaths'] - baselineData['deaths'];
 
         } else {
-                // default the change to last scraped value if no change
                 currentData['changetotal'] = lastData['changetotal'];
-                currentData['changedctive'] = lastData['changeactive'];
+                currentData['changeactive'] = lastData['changeactive'];
                 currentData['changedischarged'] = lastData['changedischarged'];
                 currentData['changedeaths'] = lastData['changedeaths'];
         }
@@ -67,8 +67,9 @@ async function main(){
         summaryTotal['changedeaths'] += currentData['changedeaths'];
 
         newView.push(currentData)
-
     }
+
+    await redisSet('lastview', newView);
 
     let lastRun = await client.get('lasttimestamp');
     
@@ -104,8 +105,10 @@ async function main(){
 
         await client.publish('UPDATED_VIEW', JSON.stringify(publishdata));
 
-        await redisSet('lastview', newView);
+        // await redisSet('lastview', newView);
 
+        
+        
         dataChanges = false;
     }
 
@@ -113,4 +116,5 @@ async function main(){
     
 }
 
+// main().then(data => console.log('done'))
 module.exports = main;

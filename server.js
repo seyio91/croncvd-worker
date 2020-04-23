@@ -6,7 +6,7 @@ const updateData = require('./utils/app')
 init()
     .then(data => {
         console.log('Cron Worker Process Running');
-        cron.schedule('0 * * * *', () => {
+        cron.schedule('* * * * *', () => {
             console.log('Checking For Updates on server');
             updateData()
                 .then(console.log('done'))

@@ -9,8 +9,11 @@ async function init(){
     let baseline = null;
     baseline = await client.get('baseline');
     let scraperData = null;
-    let prevDate = moment().subtract(1, 'day').format('YYYY-MM-DD');
     let lastSummary = null;
+
+    // Get last time            
+    const hours = await dbQuery(`SELECT date FROM ticks ORDER BY date DESC LIMIT 1`);
+    const lastTime = moment(hours.rows[0].date).format('YYYY-MM-DD');
 
     //checking for my empty summary
     // Need to check here and only scrape once for 3 
@@ -19,7 +22,7 @@ async function init(){
         console.log('No Baseline Found, Should Check DB or Run from Scraped File')
         // checking DB
         try {
-            const { rows } = await dbQuery(`SELECT * FROM ticks WHERE date = '${prevDate}'`);
+            const { rows } = await dbQuery(`SELECT * FROM ticks WHERE date = '${lastTime}'`);
             baseline = rows
         } catch (error) {
             console.log(error);
@@ -38,7 +41,7 @@ async function init(){
         // Check if Object from Scraper is available, as it will contain summary data
         if (scraperData == null){         
             try {
-                const { rows } = await dbQuery(`SELECT * FROM summary WHERE date = '${prevDate}' LIMIT 1`);
+                const { rows } = await dbQuery(`SELECT * FROM summary WHERE date = '${lastTime}' LIMIT 1`);
                 lastSummary = rows;
             } catch (error) {
                 console.error(error);
@@ -75,7 +78,8 @@ async function init(){
         try {
             const { rows } = await dbQuery(`SELECT date FROM summary ORDER BY date DESC LIMIT 1`);
             lastTimeStamp = moment(rows[0].date).format();
-            await client.set('lasttimestamp', JSON.stringify(lastTimeStamp));
+            
+            await client.set('lasttimestamp', lastTimeStamp);
         } catch (error) {
             console.error(error);
         }
@@ -87,5 +91,5 @@ async function init(){
 
 }
 
-init().then(data => console.log('done'))
-// module.exports = { init }
+//init().then(data => console.log('done'))
+module.exports = { init }

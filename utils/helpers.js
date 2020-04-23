@@ -21,14 +21,14 @@ async function getRedisObj(object){
 function defaultObj(name){
     initalObj = {
         name,
-        totalCases: 0,
-        activeCases: 0,
+        totalcases: 0,
+        activecases: 0,
         discharged: 0,
         deaths: 0,
-        changeTotal: 0,
-        changeActive: 0,
-        changeDischarged: 0,
-        changeDeaths: 0
+        changetotal: 0,
+        changeactive: 0,
+        changedischarged: 0,
+        changedeaths: 0
       }
     return initalObj;
 }
