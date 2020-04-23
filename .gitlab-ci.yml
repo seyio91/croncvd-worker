@@ -1,0 +1,43 @@
+image: docker:latest
+
+services:
+  - docker:dind
+
+before_script:
+  - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  - export REG_PREFIX="${CI_REGISTRY}/${CI_PROJECT_PATH}"
+
+stages:
+  - build_image
+  - tag_production
+
+build-croncvd-worker:
+  variables:
+    SERVICE_NAME: "worker"
+  stage: build_image
+  script:
+    - export SERVICE_NAME="$SERVICE_NAME"
+    - export IMAGE_NAME="${REG_PREFIX}/${SERVICE_NAME}:${CI_COMMIT_SHA:0:8}"
+    - export IMAGE_NAME_DEV="${REG_PREFIX}/${SERVICE_NAME}:${CI_COMMIT_REF_NAME}"
+    - docker build --pull -t "${IMAGE_NAME}" -t "${IMAGE_NAME_DEV}" -f Dockerfile .
+    - docker push "${IMAGE_NAME}"
+    - docker push "${IMAGE_NAME_DEV}"
+  only:
+    refs:
+      - master
+
+tag-croncvd-worker:
+  variables:
+    SERVICE_NAME: "worker"
+  stage: tag_production
+  script:
+    - export IMAGE_NAME_BUILD="${REG_PREFIX}/${SERVICE_NAME}:${CI_COMMIT_REF_NAME}"
+    - docker pull "${IMAGE_NAME_BUILD}"
+    - export IMAGE_NAME="${REG_PREFIX}/${SERVICE_NAME}:${CI_COMMIT_REF_NAME}"
+    - export IMAGE_NAME_LATEST="${REG_PREFIX}/${SERVICE_NAME}:latest"
+    - docker tag "${IMAGE_NAME_BUILD}" "${IMAGE_NAME}"
+    - docker tag "${IMAGE_NAME_BUILD}" "${IMAGE_NAME_LATEST}"
+    - docker push "${IMAGE_NAME}"
+    - docker push "${IMAGE_NAME_LATEST}"
+  only:
+    - tags
