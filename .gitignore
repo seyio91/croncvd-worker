@@ -2,3 +2,4 @@ tests/
 tests/*
 .env
 .gitignore
+node_modules/
