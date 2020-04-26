@@ -78,8 +78,8 @@ async function init(){
         try {
             const { rows } = await dbQuery(`SELECT date FROM summary ORDER BY date DESC LIMIT 1`);
             lastTimeStamp = moment(rows[0].date).format();
-            
-            await client.set('lasttimestamp', lastTimeStamp);
+
+            await client.set('lastimestamp', lastTimeStamp);
         } catch (error) {
             console.error(error);
         }

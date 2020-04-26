@@ -71,7 +71,7 @@ async function main(){
 
     await redisSet('lastview', newView);
 
-    let lastRun = await client.get('lasttimestamp');
+    let lastRun = await client.get('lastimestamp');
     
     if (!lastRun){
 
@@ -82,18 +82,21 @@ async function main(){
     const currentTime = moment();
     let diffTime = currentTime.diff(lastRun, 'day');
 
-    // check different between last Update and now. if its a new day and after 5am
-    if (diffTime > 0 && moment().isAfter(moment({ hour:5, minute: 0 }))){
+
+    // check different between last Update and now. if its a new day and after 3am
+    if (diffTime > 0 && moment().isAfter(moment({ hour:3, minute: 0 }))){
 
         await redisSet(`baseline`, newView);
 
-        await updateTickTable(newView);
+        dbSave = lastRun.format('YYYY-MM-DD')
 
-        await updateSumTable(summaryTotal);
+        await updateSumTable(summaryTotal, dbSave);
+
+        await updateTickTable(newView, dbSave);
 
         lastRun = currentTime.format();
 
-        await client.set('lasttimestamp', lastRun);
+        await client.set('lastimestamp', lastRun);
     }
 
 
@@ -104,10 +107,8 @@ async function main(){
         let publishdata = { summary: summaryTotal, data: newView };
 
         await client.publish('UPDATED_VIEW', JSON.stringify(publishdata));
-
-        // await redisSet('lastview', newView);
-
         
+        await client.setex('lastSummary', 34800, JSON.stringify(summaryTotal));
         
         dataChanges = false;
     }
