@@ -4,9 +4,14 @@ const moment = require('moment')
 
 
 async function scraper(){
-    let result = await axios("https://covid19.ncdc.gov.ng/");
-    let page = result.data
-    return getData(page)
+    try {
+        let result = await axios("https://covid19.ncdc.gov.ng/");
+        let page = result.data
+        return getData(page)
+    } catch (error) {
+        // This should be later turned to a retry
+        console.error(error)
+    }
 }
 
 const reg = /\d+/;
