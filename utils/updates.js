@@ -19,7 +19,7 @@ const updateTickTable = async(newData, dateString) => {
             
             await dbQuery(tickUpdateQuery, params);
         }
-        
+        console.info('Success Updating Tick Table')
         return
     } catch (error) {
         console.log(error);
@@ -34,6 +34,7 @@ const updateSumTable = async(row, dateString) => {
     console.log('updating summary table')
     try {
          await dbQuery(sumUpdateQuery, params)
+         console.info('Success Updating Summary Table')
          return
 
     } catch (error) {

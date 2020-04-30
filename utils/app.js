@@ -44,6 +44,12 @@ async function main(){
                 changeDeaths > 0 ) {
                     // let System know there is a change for push updates later
                     dataChanges = true;
+
+                    // check for change
+                    currentData['totalcases'] = currentData['totalcases'] > baselineData['totalcases'] ? currentData['totalcases'] : baselineData['totalcases'];
+                    currentData['activecases'] = currentData['activecases'] > baselineData['activecases'] ? currentData['activecases'] : baselineData['activecases'];
+                    currentData['discharged'] = currentData['discharged'] > baselineData['discharged'] ? currentData['discharged'] : baselineData['discharged'];
+                    currentData['deaths'] = currentData['deaths'] > baselineData['deaths'] ? currentData['deaths'] : baselineData['deaths'];
     
                     currentData['changetotal'] = currentData['totalcases'] - baselineData['totalcases'];
                     currentData['changeactive'] = currentData['activecases'] - baselineData['activecases'];
@@ -90,7 +96,7 @@ async function main(){
             await redisSet(`baseline`, newView);
     
             dbSave = lastRun.format('YYYY-MM-DD')
-    
+            console.log('data for update is', summaryTotal)
             await updateSumTable(summaryTotal, dbSave);
     
             await updateTickTable(newView, dbSave);
@@ -103,11 +109,11 @@ async function main(){
     
         // Fires if there was any change in data 
         if (dataChanges){
-            console.log('change occured, Sending Publish Event');
+            console.info('New Updates on NCDC, Firing Publish Event');
     
             let publishdata = { summary: summaryTotal, data: newView };
 
-            await client.setex('overview',86400, publishdata)
+            await client.setex('overview',86400, JSON.stringify(publishdata))
     
             await client.publish('UPDATED_VIEW', JSON.stringify(publishdata));
             
@@ -119,7 +125,7 @@ async function main(){
         return { summary: summaryTotal, data: newView };
 
     } catch (error) {
-        console.error(error)
+        console.error({error: error, message: `Error Updating Page at ${moment()}`})
     }
 }
 
