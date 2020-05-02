@@ -14,6 +14,7 @@ async function main(){
         let summaryTotal = scraperData.summary;
         let lastView = await getRedisObj('lastview');
         let baseline = await getRedisObj('baseline');
+        let lastSummary = await getRedisObj('lastSummary')
     
         let dataChanges = false;
     
@@ -36,6 +37,12 @@ async function main(){
             let changeActive = currentData['activecases'] - lastData['activecases'];
             let changeDischarged = currentData['discharged'] - lastData['discharged'];
             let changeDeaths = currentData['deaths'] - lastData['deaths'];
+
+                        // check for change
+            baselineData['totalcases'] = currentData['totalcases'] < baselineData['totalcases'] ? currentData['totalcases'] : baselineData['totalcases'];
+            baselineData['activecases'] = currentData['activecases'] < baselineData['activecases'] ? currentData['activecases'] : baselineData['activecases'];
+            baselineData['discharged'] = currentData['discharged'] < baselineData['discharged'] ? currentData['discharged'] : baselineData['discharged'];
+            baselineData['deaths'] = currentData['deaths'] < baselineData['deaths'] ? currentData['deaths'] : baselineData['deaths'];
     
             // calculate new change if there is any
             if (changeTotal > 0 ||
@@ -44,12 +51,6 @@ async function main(){
                 changeDeaths > 0 ) {
                     // let System know there is a change for push updates later
                     dataChanges = true;
-
-                    // check for change
-                    currentData['totalcases'] = currentData['totalcases'] > baselineData['totalcases'] ? currentData['totalcases'] : baselineData['totalcases'];
-                    currentData['activecases'] = currentData['activecases'] > baselineData['activecases'] ? currentData['activecases'] : baselineData['activecases'];
-                    currentData['discharged'] = currentData['discharged'] > baselineData['discharged'] ? currentData['discharged'] : baselineData['discharged'];
-                    currentData['deaths'] = currentData['deaths'] > baselineData['deaths'] ? currentData['deaths'] : baselineData['deaths'];
     
                     currentData['changetotal'] = currentData['totalcases'] - baselineData['totalcases'];
                     currentData['changeactive'] = currentData['activecases'] - baselineData['activecases'];
@@ -68,15 +69,17 @@ async function main(){
             // summaryTotal['totalActive'] += currentData['activeCases']
             // summaryTotal['totalDischarged'] += currentData['discharged']
             // summaryTotal['totalDeath'] += currentData['deaths']
-            summaryTotal['changetotal'] += currentData['changetotal'];
-            summaryTotal['changeactive'] += currentData['changeactive'];
-            summaryTotal['changedischarged'] += currentData['changedischarged'];
-            summaryTotal['changedeaths'] += currentData['changedeaths'];
-    
             newView.push(currentData)
         }
+        summaryTotal['changetotal'] = summaryTotal['totalcases'] - lastSummary['totalcases'];
+        summaryTotal['changeactive'] = summaryTotal['activecases'] - lastSummary['activecases'];
+        summaryTotal['changedischarged'] = summaryTotal['discharged'] - lastSummary['discharged'];
+        summaryTotal['changedeaths'] = summaryTotal['deaths'] - lastSummary['deaths'];
     
         await redisSet('lastview', newView);
+        await redisSet('currentSummary', summaryTotal);
+
+        
     
         let lastRun = await client.get('lastimestamp');
         
@@ -94,6 +97,8 @@ async function main(){
         if (diffTime > 0 && moment().isAfter(moment({ hour:3, minute: 0 }))){
     
             await redisSet(`baseline`, newView);
+
+            await client.set('lastSummary', JSON.stringify(summaryTotal));
     
             dbSave = lastRun.format('YYYY-MM-DD')
             console.log('data for update is', summaryTotal)
@@ -116,8 +121,6 @@ async function main(){
             await client.setex('overview',86400, JSON.stringify(publishdata))
     
             await client.publish('UPDATED_VIEW', JSON.stringify(publishdata));
-            
-            await client.setex('lastSummary', 86400, JSON.stringify(summaryTotal));
             
             dataChanges = false;
         }
