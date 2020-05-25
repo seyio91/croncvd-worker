@@ -36,22 +36,6 @@ const getData = html => {
 
     const $ = cheerio.load(html);
 
-    // $("table#custom1 > tbody > tr").each((index, elem)=>{
-    //     const tdTags = $(elem).find("td");
-    //     let value = numParse($(tdTags[1]).text().trim());
-    //     if (index == 0){
-    //         summary['test'] = value;
-    //     } else if (index == 1){
-    //         summary['totalcases'] = value;
-    //         summary['activecases'] += value;
-    //     } else if (index == 2){
-    //         summary['discharged'] = value;
-    //         summary['activecases'] -= value;
-    //     } else if (index == 3){
-    //         summary['deaths'] = value;
-    //         summary['activecases'] -= value;
-    //     }
-    // })
 
     const pageBlock = $("div.pcoded-content > .page-header > .page-block > .row");
     const pagetag = $(pageBlock).find('span')

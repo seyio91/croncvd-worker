@@ -100,13 +100,16 @@ async function main(){
 
             await client.set('lastSummary', JSON.stringify(summaryTotal));
     
-            dbSave = lastRun.format('YYYY-MM-DD')
-            console.log('data for update is', summaryTotal)
+            dbSave = moment().subtract(1, 'day').format('YYYY-MM-DD')
+            // console.log('data for update is', summaryTotal)
+            // console.log('data is', newView)
+            // console.log('time for update is', dbSave)
+            
             await updateSumTable(summaryTotal, dbSave);
     
             await updateTickTable(newView, dbSave);
     
-            lastRun = currentTime.format();
+            lastRun = currentTime.format("YYYYY-MM-DD");
     
             await client.set('lastimestamp', lastRun);
         }
