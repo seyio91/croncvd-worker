@@ -14,6 +14,5 @@ COPY package*.json ./
 RUN npm install
 
 COPY . .
-RUN rm Dockerfile README.md
 
 CMD npm run start
