@@ -27,7 +27,6 @@ async function main(){
                 lastData = defaultObj(currentData.name);
             }
             
-    
             if (isEmpty(baselineData)){
                 baselineData = defaultObj(currentData.name);
             }
@@ -38,7 +37,7 @@ async function main(){
             let changeDischarged = currentData['discharged'] - lastData['discharged'];
             let changeDeaths = currentData['deaths'] - lastData['deaths'];
 
-                        // check for change
+            // check for change
             baselineData['totalcases'] = currentData['totalcases'] < baselineData['totalcases'] ? currentData['totalcases'] : baselineData['totalcases'];
             baselineData['activecases'] = currentData['activecases'] < baselineData['activecases'] ? currentData['activecases'] : baselineData['activecases'];
             baselineData['discharged'] = currentData['discharged'] < baselineData['discharged'] ? currentData['discharged'] : baselineData['discharged'];
@@ -64,11 +63,6 @@ async function main(){
                     currentData['changedeaths'] = lastData['changedeaths'];
             }
     
-            // Calculate Summary. first half can be scraped off ncdc site
-            // summaryTotal['totalCases'] += currentData['totalCases']
-            // summaryTotal['totalActive'] += currentData['activeCases']
-            // summaryTotal['totalDischarged'] += currentData['discharged']
-            // summaryTotal['totalDeath'] += currentData['deaths']
             newView.push(currentData)
         }
         summaryTotal['changetotal'] = summaryTotal['totalcases'] - lastSummary['totalcases'];
@@ -78,15 +72,10 @@ async function main(){
     
         await redisSet('lastview', newView);
         await redisSet('currentSummary', summaryTotal);
-
-        
     
         let lastRun = await client.get('lastimestamp');
         
-        if (!lastRun){
-    
-            lastRun = moment().format();
-        }
+        if (!lastRun) lastRun = moment().format();
     
         lastRun = moment(lastRun)
         const currentTime = moment();
@@ -101,15 +90,12 @@ async function main(){
             await client.set('lastSummary', JSON.stringify(summaryTotal));
     
             dbSave = moment().subtract(1, 'day').format('YYYY-MM-DD')
-            // console.log('data for update is', summaryTotal)
-            // console.log('data is', newView)
-            // console.log('time for update is', dbSave)
             
             await updateSumTable(summaryTotal, dbSave);
     
             await updateTickTable(newView, dbSave);
     
-            lastRun = currentTime.format("YYYYY-MM-DD");
+            lastRun = currentTime.format("YYYY-MM-DD");
     
             await client.set('lastimestamp', lastRun);
         }
@@ -134,6 +120,4 @@ async function main(){
         console.error({error: error, message: `Error Updating Page at ${moment()}`})
     }
 }
-
-// main().then(data => console.log('done'))
 module.exports = main;

@@ -3,3 +3,8 @@ tests/*
 .env
 .gitignore
 node_modules/
+backup.sh
+utils/app_backup.js
+.dockerignore
+server_backup.js
+backup.log

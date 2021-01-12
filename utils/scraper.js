@@ -36,7 +36,6 @@ const getData = html => {
 
     const $ = cheerio.load(html);
 
-
     const pageBlock = $("div.pcoded-content > .page-header > .page-block > .row");
     const pagetag = $(pageBlock).find('span')
     summary['test'] = numParse($(pagetag).text().trim());
@@ -71,10 +70,7 @@ const getData = html => {
 
     });
 
-
-    // data to return
     return { summary, data }
-    // return { summary }
 }
 
 
@@ -88,8 +84,6 @@ const numParse = (string) => {
     }
     return parseInt(num)
 }
-
-// scraper().then(data => console.log(data));
 
 // 
 module.exports = scraper;

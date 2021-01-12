@@ -5,8 +5,6 @@ const moment = require('moment');
 
 async function init(){
     try {
-            // Check Summary
-        // check if baseline is empty
         let baseline = null;
         baseline = await client.get('baseline');
         let scraperData = null;
@@ -16,12 +14,9 @@ async function init(){
         const hours = await dbQuery(`SELECT date FROM ticks ORDER BY date DESC LIMIT 1`);
         const lastTime = moment(hours.rows[0].date).format('YYYY-MM-DD');
 
-        //checking for my empty summary
-        // Need to check here and only scrape once for 3 
-
         if (!baseline){
             console.log('No Baseline Found, Should Check DB or Run from Scraped File')
-            // checking DB
+            
             try {
                 const { rows } = await dbQuery(`SELECT * FROM ticks WHERE date = '${lastTime}'`);
                 baseline = rows
@@ -92,10 +87,9 @@ async function init(){
 
     } catch (error) {
         console.error({error: error, message: `Error Initializing Server at ${moment()}`})
-        return false
+        process.exit(1)
     }
 
 }
 
-//init().then(data => console.log('done'))
 module.exports = { init }
