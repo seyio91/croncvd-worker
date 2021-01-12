@@ -16,4 +16,4 @@ RUN npm install
 COPY . .
 RUN rm Dockerfile README.md
 
-CMD [ "node", "server.js" ]
+CMD npm run start

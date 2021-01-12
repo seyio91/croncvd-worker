@@ -2,17 +2,26 @@ const scraper = require('./scraper');
 const client = require('./redisClient');
 const { dbQuery } = require('../db/dbQuery');
 const moment = require('moment');
+const { defaultObj } = require('./helpers')
+const { updateSumTable, updateTickTable } = require('./updates')
 
 async function init(){
     try {
         let baseline = null;
         baseline = await client.get('baseline');
-        let scraperData = null;
         let lastSummary = null;
+        // Get scraped values;
+        const { data, summary } = await scraper();
 
         // Get last time            
         const hours = await dbQuery(`SELECT date FROM ticks ORDER BY date DESC LIMIT 1`);
-        const lastTime = moment(hours.rows[0].date).format('YYYY-MM-DD');
+        let lastTime;
+
+        if (hours.rowCount == 0){
+            lastTime = moment().format('YYYY-MM-DD');
+        } else {
+            lastTime = moment(hours.rows[0].date).format('YYYY-MM-DD');
+        }
 
         if (!baseline){
             console.log('No Baseline Found, Should Check DB or Run from Scraped File')
@@ -24,9 +33,8 @@ async function init(){
                 console.log(error);
             }
             // if DB Returns Empty Rows. Scrape NCDC Page
-            if (baseline.lenght == 0){
-                scraperData = await scraper();
-                baseline = scraperData.data
+            if (baseline.length == 0){
+                baseline = data
             }
             await client.set('baseline', JSON.stringify(baseline))
         }
@@ -35,7 +43,7 @@ async function init(){
         lastSummary = await client.get('lastSummary')
         if (!lastSummary){
             // Check if Object from Scraper is available, as it will contain summary data
-            if (scraperData == null){         
+            if (data == null){         
                 try {
                     const { rows } = await dbQuery(`SELECT * FROM summary WHERE date = '${lastTime}' LIMIT 1`);
                     lastSummary = rows;
@@ -43,17 +51,16 @@ async function init(){
                     console.error(error);
                 }
 
-                if (lastSummary != null || lastSummary.lenght != 0) {
+                if (lastSummary != null || lastSummary.length != 0) {
                     lastSummary = lastSummary[0]
                 } else{
-                    scraperData = await scraper();
-                    lastSummary = scraperData.summary;
+                    lastSummary = summary;
                 }
 
                 await client.set('lastSummary', JSON.stringify(lastSummary));
             } else {
                 // to avoid scraping twice
-                await client.set('lastSummary', JSON.stringify(scraperData.summary));
+                await client.set('lastSummary', JSON.stringify(summary));
             }
         }
 
@@ -73,12 +80,34 @@ async function init(){
             // checking DB
             try {
                 const { rows } = await dbQuery(`SELECT date FROM summary ORDER BY date DESC LIMIT 1`);
-                lastTimeStamp = moment(rows[0].date).format();
+
+                if (rows.length == 0){
+                    lastTimeStamp = moment().format('YYYY-MM-DD');
+                } else {
+                    lastTimeStamp = moment(hours.rows[0].date).format('YYYY-MM-DD');
+                }
 
                 await client.set('lastimestamp', lastTimeStamp);
             } catch (error) {
                 console.error(error);
             }
+        }
+
+        // Save Values to DB if empty //hrs.rowCOunt is 0
+        if (hours.rowCount == 0){
+            let savedObject = []
+            // loop over scraped values
+            for (value of data){
+                savedValue = defaultObj(value)
+                savedObject.push(savedValue)
+            }
+
+            summarySaved = defaultObj(summary)
+            summarySaved['test'] = summary.test
+            dbSave = moment().subtract(1, 'day').format('YYYY-MM-DD')
+            await updateSumTable(summarySaved, dbSave);
+    
+            await updateTickTable(savedObject, dbSave);
         }
 
         

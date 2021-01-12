@@ -18,17 +18,17 @@ async function getRedisObj(object){
     return JSON.parse(result)
 }
 
-function defaultObj(name){
+function defaultObj(object){
     initalObj = {
-        name,
-        totalcases: 0,
-        activecases: 0,
-        discharged: 0,
-        deaths: 0,
-        changetotal: 0,
-        changeactive: 0,
-        changedischarged: 0,
-        changedeaths: 0
+        name: object.name,
+        totalcases: object.totalcases || 0,
+        activecases: object.activecases || 0,
+        discharged: object.discharged || 0,
+        deaths: object.deaths || 0,
+        changetotal: object.changetotal || 0,
+        changeactive: object.changeactive || 0,
+        changedischarged: object.changedischarged || 0,
+        changedeaths: object.changedeaths || 0,
       }
     return initalObj;
 }
